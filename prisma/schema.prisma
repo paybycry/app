@@ -1,0 +1,57 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite" // "postgresql" or "sqlite" for development
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int           @id @default(autoincrement())
+  name              String
+  login             String        @unique
+  email             String        @unique
+  password          String
+  salt              String
+  active            Boolean       @default(false)
+  confirmationToken String?       @unique
+  resetToken        String?       @unique
+  role              String        @default("user")
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  addresses         Address[]
+  transactions      Transaction[]
+}
+
+model Merchant {
+  id           Int           @id @default(autoincrement())
+  chainId      Int
+  address      String        @unique
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @default(now()) @updatedAt
+  transactions Transaction[]
+}
+
+model Address {
+  id            Int           @id @default(autoincrement())
+  userId        Int
+  signedAddress String        @unique
+  createdAt     DateTime      @default(now())
+  user          User          @relation(fields: [userId], references: [id])
+  transactions  Transaction[]
+}
+
+model Transaction {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  merchantId      Int
+  addressId       Int
+  transactionHash String   @unique
+  amount          Float?   @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id])
+  merchant        Merchant @relation(fields: [merchantId], references: [id])
+  address         Address  @relation(fields: [addressId], references: [id])
+}
